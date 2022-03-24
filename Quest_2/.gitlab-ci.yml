@@ -1,0 +1,58 @@
+image: adimil/python-nodejs-serverless:latest
+
+stages:
+  - install
+  - test
+  - deploy
+
+prodInstall:
+  stage: install
+  script:
+    - npm install --production
+  artifacts:
+    untracked: true
+
+unitTesting:
+  stage: test
+  dependencies:
+    - prodInstall
+  script:
+    - npm install
+    - npm run build
+    - npm test
+  artifacts:
+    untracked: true
+
+deployingDev:
+  stage: deploy
+  only:
+    - dev    
+  dependencies:
+    - prodInstall
+    - unitTesting
+  script:
+    - pip3 install awscli
+    - aws configure set profile dev-bucket 
+    - aws configure set aws_access_key_id "$AWS_KEY_DEV" 
+    - aws configure set aws_secret_access_key "$AWS_SECRET" 
+    - ((aws s3api create-bucket --acl public-read  --bucket react-app-dev && echo 'Created bucket.') || echo '[Error] Already existing bucket.')
+    - aws s3api put-bucket-website --bucket react-app-dev --website-configuration file://stactic_test_web.json
+    - aws s3api put-bucket-policy --bucket react-app-dev --policy file://dev-policy.json
+    - aws s3 sync ./build/ s3://react-app-dev 
+
+deployingProd:
+  stage: deploy
+  only:
+    - prod
+  dependencies:
+    - prodInstall
+    - unitTesting
+  script:
+    - pip3 install awscli
+    - aws configure set profile prod-bucket
+    - aws configure set aws_access_key_id "$AWS_KEY_PROD" 
+    - aws configure set aws_secret_access_key "$AWS_SECRET_PROD" 
+    - ((aws s3api create-bucket --acl public-read  --bucket react-app-prod && echo 'Created bucket.') || echo '[Error] Already existing bucket.')
+    - aws s3api put-bucket-website --bucket react-app-prod --website-configuration file://stactic_test_web.json
+    - aws s3api put-bucket-policy --bucket react-app-prod --policy file://prod-policy.json
+    - aws s3 sync ./build/ s3://react-app-prod
