@@ -20,7 +20,7 @@ module "eks_w_nodegroups_and_fargate" {
     }
 
     "profile2" = {
-      fargate_profile_name   = "cibd1airfgttest01gene002"
+      fargate_profile_name   = "fargate_name_example"
       pod_execution_role_arn = module.eks_fargate_role.role_arn 
       subnet_ids             = ["subnet-non-routable-id3", "subnet-non-routable-id4"]
       namespace              = "test002"
@@ -64,12 +64,12 @@ module "eks_w_nodegroups_and_fargate" {
   }
   //TAGS
   tags = {
-    cost_center   = "CC-CIB"
+    cost_center   = "CC"
     product       = "INFRASTRUCTURE SERVICES"
     cia           = "BLL"
     channel       = "OMNICHANNEL"
     description   = "PLATFORM RESOURCES TEST IAC"
-    tracking_code = "CIB"
+    tracking_code = "konfio_code"
     Testing       = "tag testing"
   }
 
